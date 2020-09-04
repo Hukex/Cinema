@@ -30,7 +30,7 @@ But it also has **HTML** and **JavaScript** to make it works correctly.
 
 # Preview🔍
 
-[💠You can try it!💠](https://hukex.github.io/Cinema/index.html)
+[💠You can try it!💠](https://hukex.github.io/Cinema/)
 
  ![GIF](https://github.com/Hukex/Cinema/blob/master/readmefiles/preview.gif)
 </p>
