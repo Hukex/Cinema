@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Cartelera ツ Fernando Vera</title>
+    <!-- ICONO DE PARTE SUPERIOR IZQUIERDA (SOLO ORDENADORES)-->
+    <link rel="shortcut icon" href="img/movies-icon.png">
+    <!-- Archivo necesario para el uso del jQuery-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <!-- Archivo necesario para el uso de las imagenes del titulo(iconos)-->
+    <script src="https://kit.fontawesome.com/7ed2af0f17.js" crossorigin="anonymous"></script>
+    <style>
+        /*FUENTES DE LAS LETRAS */
+        
+        @font-face {
+            font-family: "BebasNeue-Regular";
+            src: url("fonts/BebasNeue-Regular.woff2");
+        }
+        
+        @font-face {
+            font-family: "CaviarDreams";
+            src: url("fonts/CaviarDreams.ttf");
+        }
+        /*PRINCIPAL */
+        
+        body {
+            font-family: BebasNeue-Regular;
+            background-image: linear-gradient(rgba(15, 41, 16, 0.5), rgba(15, 41, 16, 0.5)), url("img/fondo-otono.jpg");
+        }
+        
+        #contenedor {
+            color: rgb(204, 185, 16);
+            font-size: 1em;
+            background-color: rgb(30, 72, 163);
+            background-image: url("img/fondo-otono.jpg");
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-gap: 20px;
+            padding: 3%;
+            border: rgb(4, 21, 56) 2px solid;
+            text-shadow: 4px 4px 2px black;
+        }
+        /*Ajustes de las imagenes , que vienen con un tamaño de 170x115*/
+        
+        img {
+            border-radius: 4%;
+            border: rgb(211, 206, 180) 2.8px solid;
+        }
+        /* PARTE SUPERIOR AL DESPLAZARSE(scroll) */
+        
+        .mover {
+            background-image: linear-gradient(rgba(15, 41, 16, 0.5), rgba(15, 41, 16, 0.5)), url("img/fondo-otono.jpg");
+            position: fixed;
+            width: 100%;
+            left: 1px;
+            font-size: .5em;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.664);
+            top: -10px;
+            z-index: 1000;
+        }
+        /* LADOS AL DESPLAZARSE */
+        
+        .moverlados {
+            width: 85%;
+        }
+        /*  Titulo interior de las imagenes */
+        
+        #contenedor>div>.ventanaEmergenteConSinopsis>span>em {
+            font-size: 1em;
+            color: rgb(197, 186, 186);
+            text-decoration: underline rgb(197, 186, 186);
+        }
+        /* BOTON DE TRAILER*/
+        
+        button {
+            font-family: "CaviarDreams";
+            background-color: rgb(197, 186, 186);
+            width: 180px;
+            font-size: 1.2em;
+            position: fixed;
+            top: 194px;
+            left: 0px;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            font-weight: 600;
+            opacity: 0.8;
+            border: 3.3px solid rgba(0, 0, 0, 0.966);
+            box-shadow: .3px .3px 20px rgb(0, 0, 0);
+        }
+        
+        button:focus {
+            outline: 0;
+            /*Para eliminar el borde que pone el navegador cuando se da click a un boton*/
+        }
+        
+        button:hover {
+            opacity: 1;
+        }
+        /* CONTENEDOR INVIDIVUAL PARA CADA IMAGEN JUNTO A SU TEXTO INFERIOR*/
+        
+        .x {
+            position: relative;
+        }
+        
+        .x .ventanaEmergenteConSinopsis {
+            min-width: 140px;
+            min-height: 195px;
+            top: -18px;
+            left: 50%;
+            transform: translate(-50%, 0);
+            /* Mueve el cuadro SOBRE SI MISMO hacia su izquierda un 50%*/
+            padding: 10px 20px;
+            position: absolute;
+            z-index: 999;
+            display: none;
+        }
+        /* Cuando el cursor pasa por encima*/
+        
+        .x:hover .ventanaEmergenteConSinopsis {
+            font-family: "CaviarDreams";
+            display: block;
+            font-size: .7em;
+            color: rgb(231, 231, 231);
+            background-color: rgba(0, 0, 0, 0.795);
+            border: .3px solid rgba(0, 0, 0, 0.966);
+            box-shadow: 2px 2px 1px #00000080;
+            border-radius: 10%;
+        }
+        /*Iconos de cine parte superior*/
+        
+        .fas {
+            color: rgb(204, 185, 16);
+            text-shadow: 5px 5px 2px black;
+        }
+        /*TITULO DE LA PAGINA(Cartelera)*/
+        
+        .tit {
+            color: whitesmoke;
+            font-size: 3em;
+            text-shadow: 5px 5px 2px black;
+        }
+        /* VENTANA EMERGENTE DEL TRAILER */
+        
+        .ventanaEmergente {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        /*Ajustes para que arreglar lo que no funciona correctamente por el uso del grid 
+        (elementos que salen del div principal). Restructurando el contenido*/
+        
+        @media screen and (max-width: 722px) {
+            #contenedor {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media screen and (max-width: 820px)and (min-width: 652px) {
+            #contenedor {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+    </style>
+    <script>
+        // FUNCION QUE DETECTA SI SE REALIZA SCROLL , Y EL TITULO SE QUEDA FIJO A LA PARTE SUPERIOR
+        $(document).ready(function() {
+            var altura = $('.encabezado').offset().top; // Recoge la altura
+            $(window).on("scroll", function() { // Cuando se hace scroll en la ventana se ejecuta 
+                console.log("Altura = "+altura);
+                console.log("Windowscroll = "+$(window).scrollTop());
+                if ($(window).scrollTop() > altura) { // Si es mayor la diferencia que la altura anterior
+                    $(".encabezado").addClass("mover"); // Se le añaden estas dos clases.
+                    $("#contenedor").addClass("moverlados");
+
+                } else {
+                    $(".encabezado").removeClass("mover"); // Se eliminan cuando la diferencia es menor
+                    $("#contenedor").removeClass("moverlados");
+                }
+            })
+        });
+
+        // FUNCION QUE SE EJECUTA CUANDO SE DA CLICK A UN BOTON DE TRAILER 
+
+        function trailer(x) { // Se le pasa el valor para saber de que boton se trata
+            var video = document.getElementById(x); // Se consigue la variable
+            video.style.display = "block"; // Se muestra por pantalla la ventana que contiene el video
+            video.style.paddingTop = (($(window).height() * 100) / 532) + "px";
+            // La anterior linea de codigo se usa para que el video se quede centrado respecto al tipo de pantalla
+            var texto = "<h1 id='text' style='position:relative; width:400px;background-color: rgba(0, 0, 0, 0.795); width:450px;border-radius:40px;'>Pulsa fuera del video para cerrarlo<h1>";
+            video.innerHTML += texto; // Agrega un h1 con un mensaje  para cerrar el video
+            window.onclick = function(event) { // Esto sirve para que cuando el usuario de click fuera de la
+                if (event.target == video) { // pantalla el video se cierre y se detenga.
+                    video.style.display = "none"; // Para detenerlo se usa una instruccion de la API de Youtube
+                    $('.' + x)[0].contentWindow.postMessage('{"event":"command","func":"' + 'stopVideo' + '","args":""}', '*');
+                    document.getElementById("text").outerHTML = ""; // Para que no salga repetido el mensaje
+                }
+            }
+        }
+
+        // ?enablejsapi=1&version=3&playerapiid=ytplayer (añadir esto a los url de los videos para que se detengan)
+    </script>
+
+</head>
+<!--                                 CONTENIDO DE LA PAGINA                                  -->
+
+<body>
+
+    <center>
+        <div class="encabezado">
+            <h1 class="tit"><i class="fas fa-film"></i> Cartelera <i class="fas fa-film"></i></h1>
+        </div>
+
+        <div id="contenedor">
+            <div class="x">
+                <img id="alita" src="img/alita.jpg"><br /><span>Alita: Battle Angel</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Alita: Battle Angel</h3>
+                        </em>
+                        A deactivated cyborg is revived, but cannot remember anything of her past life and goes on a
+                        quest
+                        to find out who she is.
+                    </span><br />
+                    <button onclick="trailer('alitab')">Trailer</button>
+
+                </div>
+                <div id="alitab" class="ventanaEmergente">
+                    <iframe class="alitab" width="560" height="315" src="https://www.youtube.com/embed/U3D2vmWD88w?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="adastra" src="img/adastra.jpg"><br /><span>Ad Astra</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Ad Astra</h3>
+                        </em>
+                        Astronaut Roy McBride undertakes a mission across an unforgiving solar system to uncover the
+                        truth about his missing father and his doomed expedition that now, 30 years later, threatens the
+                        universe.<br />
+                        <button onclick="trailer('adastrab')">Trailer</button>
+                    </span>
+
+                </div>
+                <div id="adastrab" class="ventanaEmergente">
+
+                    <iframe class="adastrab" width="560" height="315" src="https://www.youtube.com/embed/nxi6rtBtBM0?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="avengers" src="img/avengers.jpg"><br /><span>Avengers: Endgame</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Avengers: Endgame</h3>
+                        </em>
+                        After the devastating events of Avengers: Infinity War (2018), the universe is in ruins. With
+                        the help of remaining allies, the Avengers assemble once more in order to reverse Thanos'
+                        actions and restore balance to the universe.
+                    </span><br />
+                    <button onclick="trailer('avengersb')">Trailer</button>
+
+                </div>
+                <div id="avengersb" class="ventanaEmergente">
+
+                    <iframe class="avengersb" width="560" height="315" src="https://www.youtube.com/embed/TcMBFSGVi1c?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+
+
+            </div>
+            <div class="x">
+                <img id="toy" src="img/toy.jpg"><br /><span>Toy Story 4</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Toy Story 4</h3>
+                        </em>
+                        When a new toy called "Forky" joins Woody and the gang, a road trip alongside old and new
+                        friends reveals how big the world can be for a toy.
+                    </span><br />
+                    <button onclick="trailer('toyb')">Trailer</button>
+
+                </div>
+                <div id="toyb" class="ventanaEmergente">
+
+                    <iframe class="toyb" width="560" height="315" src="https://www.youtube.com/embed/wmiIUN-7qhE?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="rey" src="img/reyleon.jpg"><br /><span>The Lion King</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>The Lion King</h3>
+                        </em>
+                        After the murder of his father, a young lion prince flees his kingdom only to learn the true
+                        meaning of responsibility and bravery.
+                    </span><br />
+                    <button onclick="trailer('reyb')">Trailer</button>
+
+                </div>
+                <div id="reyb" class="ventanaEmergente">
+
+                    <iframe class="reyb" width="560" height="315" src="https://www.youtube.com/embed/7TavVZMewpY?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="spiderman" src="img/spiderman2.jpg"><br /><span>Spider-Man: Far from Home</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Spider-Man: Far from Home</h3>
+                        </em>
+                        Following the events of Vengadores: Endgame (2019), Spider-Man must step up to take on new
+                        threats in a world that has changed forever.
+                    </span><br />
+                    <button onclick="trailer('spidermanb')">Trailer</button>
+
+                </div>
+                <div id="spidermanb" class="ventanaEmergente">
+
+                    <iframe class="spidermanb" width="560" height="315" src="https://www.youtube.com/embed/Nt9L1jCKGnE?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="joker" src="img/joker.jpg"><br /><span>Joker</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Joker</h3>
+                        </em>
+                        A gritty character study of Arthur Fleck, a man disregarded by society.
+
+                    </span><br />
+                    <button onclick="trailer('jokerb')">Trailer</button>
+
+                </div>
+                <div id="jokerb" class="ventanaEmergente">
+
+                    <iframe class="jokerb" width="560" height="315" src="https://www.youtube.com/embed/zAGVQLHvwOY?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+
+            </div>
+            <div class="x">
+                <img id="terminator" src="img/terminatordark.jpg"><br /><span>Terminator: Dark Fate</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Terminator: Dark Fate</h3>
+                        </em>
+                        Sarah Connor and a hybrid cyborg human must protect a young girl from a newly modified liquid
+                        Terminator from the future.
+                    </span><br />
+                    <button onclick="trailer('terminatorb')">Trailer</button>
+
+                </div>
+                <div id="terminatorb" class="ventanaEmergente">
+
+                    <iframe class="terminatorb" width="560" height="315" src="https://www.youtube.com/embed/jCyEX6u-Yhs?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="rambo" src="img/rambo.jfif"><br /><span>Rambo: Last Blood</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Rambo: Last Blood</h3>
+                        </em>
+                        Rambo must confront his past and unearth his ruthless combat skills to exact revenge in a final
+                        mission.
+                    </span><br />
+                    <button onclick="trailer('rambob')">Trailer</button>
+
+                </div>
+                <div id="rambob" class="ventanaEmergente">
+
+                    <iframe class="rambob" width="560" height="315" src="https://www.youtube.com/embed/4vWg5yJuWfs?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="phoenix" src="img/phoenix.jfif"><br /><span>Dark Phoenix</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Dark Phoenix</h3>
+                        </em>
+                        Jean Grey begins to develop incredible powers that corrupt and turn her into a Dark Phoenix. Now
+                        the X-Men will have to decide if the life of a team member is worth more than all of humanity.
+                    </span><br />
+                    <button onclick="trailer('phoenixb')">Trailer</button>
+
+                </div>
+                <div id="phoenixb" class="ventanaEmergente">
+
+                    <iframe class="phoenixb" width="560" height="315" src="https://www.youtube.com/embed/QWbMckU3AOQ?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="aladdin" src="img/aladdin.jfif"><br /><span>Aladdin</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Aladdin</h3>
+                        </em>
+                        A kind-hearted street urchin and a power-hungry Grand Vizier vie for a magic lamp that has the
+                        power to make their deepest wishes come true.
+                    </span><br />
+                    <button onclick="trailer('aladdinb')">Trailer</button>
+
+                </div>
+                <div id="aladdinb" class="ventanaEmergente">
+
+                    <iframe class="aladdinb" width="560" height="315" src="https://www.youtube.com/embed/foyufD52aog?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="aero" src="img/aeronauts.jpg"><br /><span>The Aeronauts</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>The Aeronauts</h3>
+                        </em>
+                        Pilot Amelia Wren (Felicity Jones) and scientist James Glaisher (Eddie Redmayne) find themselves
+                        in an epic fight for survival while attempting to make discoveries in a hot air balloon.
+                    </span><br />
+                    <button onclick="trailer('aerob')">Trailer</button>
+
+                </div>
+                <div id="aerob" class="ventanaEmergente">
+
+                    <iframe class="aerob" width="560" height="315" src="https://www.youtube.com/embed/Rm4VnwCtQO8?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="ana" src="img/annabelle.jfif"><br /><span>Annabelle Comes Home</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Annabelle Comes Home</h3>
+                        </em>
+                        While babysitting the daughter of Ed and Lorraine Warren, a teenager and her friend unknowingly
+                        awaken an evil spirit trapped in a doll.
+                    </span><br />
+                    <button onclick="trailer('anab')">Trailer</button>
+
+                </div>
+                <div id="anab" class="ventanaEmergente">
+
+                    <iframe class="anab" width="560" height="315" src="https://www.youtube.com/embed/bCxm7cTpBAs?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="out" src="img/oneuponatime.jfif"><br /><span>Once Upon a Time... in Hollywood</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Once Upon a Time... in Hollywood</h3>
+                        </em>
+                        A faded television actor and his stunt double strive to achieve fame and success in the film
+                        industry during the final years of Hollywood's Golden Age in 1969 Los Angeles.
+                    </span><br />
+                    <button onclick="trailer('outb')">Trailer</button>
+
+                </div>
+                <div id="outb" class="ventanaEmergente">
+
+                    <iframe class="outb" width="560" height="315" src="https://www.youtube.com/embed/ELeMaP8EPAA?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="captainmarvel" src="img/images.jfif"><br /><span>Captain Marvel</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Captain Marvel</h3>
+                        </em>
+                        Carol Danvers becomes one of the universe's most powerful heroes when Earth is caught in the
+                        middle of a galactic war between two alien races.
+                    </span><br />
+                    <button onclick="trailer('captainmarvelb')">Trailer</button>
+
+                </div>
+                <div id="captainmarvelb" class="ventanaEmergente">
+
+                    <iframe class="captainmarvelb" width="560" height="315" src="https://www.youtube.com/embed/Z1BCujX3pw8?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+
+
+
+            <!-- PRUEBAS -->
+
+
+            <div class="x">
+                <img id="alita" src="img/alita.jpg"><br /><span>Alita: Battle Angel</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Alita: Battle Angel</h3>
+                        </em>
+                        A deactivated cyborg is revived, but cannot remember anything of her past life and goes on a
+                        quest
+                        to find out who she is.
+                    </span><br />
+                    <button onclick="trailer('alitab')">Trailer</button>
+
+                </div>
+                <div id="alitab" class="ventanaEmergente">
+                    <iframe class="alitab" width="560" height="315" src="https://www.youtube.com/embed/U3D2vmWD88w?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="adastra" src="img/adastra.jpg"><br /><span>Ad Astra</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Ad Astra</h3>
+                        </em>
+                        Astronaut Roy McBride undertakes a mission across an unforgiving solar system to uncover the
+                        truth about his missing father and his doomed expedition that now, 30 years later, threatens the
+                        universe.<br />
+                        <button onclick="trailer('adastrab')">Trailer</button>
+                    </span>
+
+                </div>
+                <div id="adastrab" class="ventanaEmergente">
+
+                    <iframe class="adastrab" width="560" height="315" src="https://www.youtube.com/embed/nxi6rtBtBM0?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="avengers" src="img/avengers.jpg"><br /><span>Avengers: Endgame</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Avengers: Endgame</h3>
+                        </em>
+                        After the devastating events of Avengers: Infinity War (2018), the universe is in ruins. With
+                        the help of remaining allies, the Avengers assemble once more in order to reverse Thanos'
+                        actions and restore balance to the universe.
+                    </span><br />
+                    <button onclick="trailer('avengersb')">Trailer</button>
+
+                </div>
+                <div id="avengersb" class="ventanaEmergente">
+
+                    <iframe class="avengersb" width="560" height="315" src="https://www.youtube.com/embed/TcMBFSGVi1c?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+
+
+            </div>
+            <div class="x">
+                <img id="toy" src="img/toy.jpg"><br /><span>Toy Story 4</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Toy Story 4</h3>
+                        </em>
+                        When a new toy called "Forky" joins Woody and the gang, a road trip alongside old and new
+                        friends reveals how big the world can be for a toy.
+                    </span><br />
+                    <button onclick="trailer('toyb')">Trailer</button>
+
+                </div>
+                <div id="toyb" class="ventanaEmergente">
+
+                    <iframe class="toyb" width="560" height="315" src="https://www.youtube.com/embed/wmiIUN-7qhE?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="rey" src="img/reyleon.jpg"><br /><span>The Lion King</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>The Lion King</h3>
+                        </em>
+                        After the murder of his father, a young lion prince flees his kingdom only to learn the true
+                        meaning of responsibility and bravery.
+                    </span><br />
+                    <button onclick="trailer('reyb')">Trailer</button>
+
+                </div>
+                <div id="reyb" class="ventanaEmergente">
+
+                    <iframe class="reyb" width="560" height="315" src="https://www.youtube.com/embed/7TavVZMewpY?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="spiderman" src="img/spiderman2.jpg"><br /><span>Spider-Man: Far from Home</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Spider-Man: Far from Home</h3>
+                        </em>
+                        Following the events of Vengadores: Endgame (2019), Spider-Man must step up to take on new
+                        threats in a world that has changed forever.
+                    </span><br />
+                    <button onclick="trailer('spidermanb')">Trailer</button>
+
+                </div>
+                <div id="spidermanb" class="ventanaEmergente">
+
+                    <iframe class="spidermanb" width="560" height="315" src="https://www.youtube.com/embed/Nt9L1jCKGnE?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="joker" src="img/joker.jpg"><br /><span>Joker</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Joker</h3>
+                        </em>
+                        A gritty character study of Arthur Fleck, a man disregarded by society.
+
+                    </span><br />
+                    <button onclick="trailer('jokerb')">Trailer</button>
+
+                </div>
+                <div id="jokerb" class="ventanaEmergente">
+
+                    <iframe class="jokerb" width="560" height="315" src="https://www.youtube.com/embed/zAGVQLHvwOY?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+
+            </div>
+            <div class="x">
+                <img id="terminator" src="img/terminatordark.jpg"><br /><span>Terminator: Dark Fate</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Terminator: Dark Fate</h3>
+                        </em>
+                        Sarah Connor and a hybrid cyborg human must protect a young girl from a newly modified liquid
+                        Terminator from the future.
+                    </span><br />
+                    <button onclick="trailer('terminatorb')">Trailer</button>
+
+                </div>
+                <div id="terminatorb" class="ventanaEmergente">
+
+                    <iframe class="terminatorb" width="560" height="315" src="https://www.youtube.com/embed/jCyEX6u-Yhs?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="rambo" src="img/rambo.jfif"><br /><span>Rambo: Last Blood</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Rambo: Last Blood</h3>
+                        </em>
+                        Rambo must confront his past and unearth his ruthless combat skills to exact revenge in a final
+                        mission.
+                    </span><br />
+                    <button onclick="trailer('rambob')">Trailer</button>
+
+                </div>
+                <div id="rambob" class="ventanaEmergente">
+
+                    <iframe class="rambob" width="560" height="315" src="https://www.youtube.com/embed/4vWg5yJuWfs?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="phoenix" src="img/phoenix.jfif"><br /><span>Dark Phoenix</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Dark Phoenix</h3>
+                        </em>
+                        Jean Grey begins to develop incredible powers that corrupt and turn her into a Dark Phoenix. Now
+                        the X-Men will have to decide if the life of a team member is worth more than all of humanity.
+                    </span><br />
+                    <button onclick="trailer('phoenixb')">Trailer</button>
+
+                </div>
+                <div id="phoenixb" class="ventanaEmergente">
+
+                    <iframe class="phoenixb" width="560" height="315" src="https://www.youtube.com/embed/QWbMckU3AOQ?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="aladdin" src="img/aladdin.jfif"><br /><span>Aladdin</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Aladdin</h3>
+                        </em>
+                        A kind-hearted street urchin and a power-hungry Grand Vizier vie for a magic lamp that has the
+                        power to make their deepest wishes come true.
+                    </span><br />
+                    <button onclick="trailer('aladdinb')">Trailer</button>
+
+                </div>
+                <div id="aladdinb" class="ventanaEmergente">
+
+                    <iframe class="aladdinb" width="560" height="315" src="https://www.youtube.com/embed/foyufD52aog?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="aero" src="img/aeronauts.jpg"><br /><span>The Aeronauts</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>The Aeronauts</h3>
+                        </em>
+                        Pilot Amelia Wren (Felicity Jones) and scientist James Glaisher (Eddie Redmayne) find themselves
+                        in an epic fight for survival while attempting to make discoveries in a hot air balloon.
+                    </span><br />
+                    <button onclick="trailer('aerob')">Trailer</button>
+
+                </div>
+                <div id="aerob" class="ventanaEmergente">
+
+                    <iframe class="aerob" width="560" height="315" src="https://www.youtube.com/embed/Rm4VnwCtQO8?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="ana" src="img/annabelle.jfif"><br /><span>Annabelle Comes Home</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Annabelle Comes Home</h3>
+                        </em>
+                        While babysitting the daughter of Ed and Lorraine Warren, a teenager and her friend unknowingly
+                        awaken an evil spirit trapped in a doll.
+                    </span><br />
+                    <button onclick="trailer('anab')">Trailer</button>
+
+                </div>
+                <div id="anab" class="ventanaEmergente">
+
+                    <iframe class="anab" width="560" height="315" src="https://www.youtube.com/embed/bCxm7cTpBAs?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="out" src="img/oneuponatime.jfif"><br /><span>Once Upon a Time... in Hollywood</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Once Upon a Time... in Hollywood</h3>
+                        </em>
+                        A faded television actor and his stunt double strive to achieve fame and success in the film
+                        industry during the final years of Hollywood's Golden Age in 1969 Los Angeles.
+                    </span><br />
+                    <button onclick="trailer('outb')">Trailer</button>
+
+                </div>
+                <div id="outb" class="ventanaEmergente">
+
+                    <iframe class="outb" width="560" height="315" src="https://www.youtube.com/embed/ELeMaP8EPAA?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="x">
+                <img id="captainmarvel" src="img/images.jfif"><br /><span>Captain Marvel</span>
+                <div class="ventanaEmergenteConSinopsis">
+                    <span><em>
+                            <h3>Captain Marvel</h3>
+                        </em>
+                        Carol Danvers becomes one of the universe's most powerful heroes when Earth is caught in the
+                        middle of a galactic war between two alien races.
+                    </span><br />
+                    <button onclick="trailer('captainmarvelb')">Trailer</button>
+
+                </div>
+                <div id="captainmarvelb" class="ventanaEmergente">
+
+                    <iframe class="captainmarvelb" width="560" height="315" src="https://www.youtube.com/embed/Z1BCujX3pw8?enablejsapi=1&version=3&playerapiid=ytplayer" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </div>
+            </div>
+
+
+
+
+
+        </div>
+    </center>
+</body>
+
+</html>
