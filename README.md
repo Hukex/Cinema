@@ -22,7 +22,7 @@
 
 
 **Date**: October, 2019.   
-**Duration**: 2 Day.
+**Duration**: 2 Days.
 
 
 This project was developted in order to practice with **CSS Grid**.
